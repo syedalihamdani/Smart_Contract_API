@@ -16,12 +16,15 @@ const request = require("request");
 
 const url2 = "https://api.etherscan.io/api?module=gastracker&action=gasestimate&gasprice=2000000000&apikey=7N13F63MRTXKACIKGGYEGG3SZ314XV4G51";
 const url3 = "https://api.etherscan.io/api?module=gastracker&action=gasoracle&apikey=7N13F63MRTXKACIKGGYEGG3SZ314XV4G51";
-
+let SafeGasPriceInToWei;
 request(url3, (error, response, body) => {
     if (!error && response.statusCode == 200) {
         console.log("success")
         let res=JSON.parse(body)
-        console.log(res.result.FastGasPrice);
+        let SafeGasPrice=res.result.SafeGasPrice
+        console.log(SafeGasPrice);
+        SafeGasPriceInToWei=web3.utils.toWei(SafeGasPrice,"gwei");
+        console.log(SafeGasPriceInToWei)
 
     }
     else
@@ -61,7 +64,7 @@ console.log(`TVK APPROVE FUNCTION Transaction hash:${receipt.transactionHash}`);
 
 const init2=async ()=>{
     const networkId=await web3.eth.net.getId();
-    const tx=PaymentContract.methods.buyLandWithEth("SMALL",705);
+    const tx=PaymentContract.methods.buyLandWithEth("SMALL",711);
     // const gas=await tx.estimateGas({from:accountAddress});
     // console.log(gas);
     const gasPrice=await web3.eth.getGasPrice();
@@ -79,7 +82,7 @@ const init2=async ()=>{
             value:value,
             data,
             gas:4000000,
-            gasPrice,
+            gasPrice:SafeGasPriceInToWei,
             nonce,
             chainId:networkId
         },
@@ -95,13 +98,21 @@ async function TVKallowance(owner,spender) {
     await console.log(`allowance function of TVK smart contract is called value:${allowance}`);
 }
  
-
+async function getTokenCategoryBasedPrice(Category) {
+    priceInEth= await PaymentContract.methods.getTokenCategoryBasedPrice(Category).call()
+    await console.log(`getTokenCategoryBasedPrice function of Priced smart contract is called value:${priceInEth}`);
+}
+async function calculateLandPriceInToken(Category,Token) {
+    priceInToken= await PaymentContract.methods.calculateLandPriceInToken(Category,Token).call()
+    await console.log(`calculateLandPriceInToken function of Priced smart contract is called value:${priceInToken}`);
+}
 
 
      
 
-
-// TVKallowance("0x4f7959a3191e2505275c8b16c6228A64D3178bbE","0x2760e501577471e561b1835186845F0114C35Beb");
+getTokenCategoryBasedPrice("LARGE");
+calculateLandPriceInToken("SMALL","TVK");
+TVKallowance("0x4f7959a3191e2505275c8b16c6228A64D3178bbE","0x2760e501577471e561b1835186845F0114C35Beb");
 
 // init1();
 // init2();
